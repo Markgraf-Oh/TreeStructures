@@ -2,10 +2,25 @@
 //
 
 #include <iostream>
+#include "BinaryTree.h"
+#include "BinarySearchTree.h"
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    BinarySearchTree<int> test_tree(10, [](const int& left, const int& right)->int
+        {
+            if (left > right) return 1;
+            if (left == right) return 0;
+            return -1;
+        }, true);
+
+    test_tree.AddData(10);
+    std::cout << test_tree.GetNodeCount() << std::endl;
+
+    test_tree.DeleteData(5);
+    std::cout << test_tree.GetNodeCount() << std::endl;
+    test_tree.DeleteData(10);
+    std::cout << test_tree.GetNodeCount() << std::endl;
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
