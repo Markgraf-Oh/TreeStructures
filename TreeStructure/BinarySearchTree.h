@@ -1,5 +1,5 @@
 #pragma once
-#include <queue>
+
 #include "BinaryTree.h"
 
 template<typename T>
@@ -12,26 +12,34 @@ public:
 	BinarySearchTree(T init_root_data, int (*init_rule)(const T& left, const T& right), bool IsSet = false);
 
 public:
-	//add data;
-	//만약 중복이 허용 된다면, 동일한 데이터는 왼쪽 방향으로 1열로 늘어선다.
+	//Create new node with given data and Add that node into Tree. returns true if succeed
 	virtual bool AddData(T newdata) override;
-		
-	//find data;
+	
+	/**	Find node which has given data.
+	* @param target_data	data to search
+	* @param start_node		the starting point of searching. use root of this Tree.
+	* @param search_return	reperence of Node pointer value. This value will be set as a pointer to found node.
+	* @return	returns true if found data
+	*/
 	virtual bool FindData(const T& target_data, BinaryTreeNode<T>* start_node, BinaryTreeNode<T>*& search_return) const override;
 
 	//find node with data and pop it from the tree
 	virtual BinaryTreeNode<T>* PopData(T target_data) override;
-
+	
+	//find node with data and delete it from the tree
 	virtual bool DeleteData(T target_data) override;
 
 protected:
-	//pop node out from the tree. without delete it.
+	/**	pop node out from the tree. without delete it.
+	* @return	pointer of poped node.
+	*/
 	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) override;
 
+	//pop node out from the tree. and delete it. returns true if succeed.
 	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) override;
 
+	//insert given node under the target_node.  returns true if succeed.
 	virtual bool InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node);
-		
 };
 
 template<typename T>

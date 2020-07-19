@@ -1,16 +1,21 @@
 #pragma once
 #include "BinaryTreeNode.h"
 
+/**	Base Class for Binary Trees.
+*/
 template<typename T>
 class BinaryTree
 {
 public:
-	BinaryTree(int (*init_rule)(const T& super, const T& minor), bool IsSet = false);
+	BinaryTree(int (*init_rule)(const T& superior, const T& minor), bool IsSet = false);
 
-	BinaryTree(T init_root_data, int (*init_rule)(const T& super, const T& minor), bool IsSet = false);
+	BinaryTree(T init_root_data, int (*init_rule)(const T& superior, const T& minor), bool IsSet = false);
 
 	virtual ~BinaryTree();
 public:
+	/**	if this value is true, this tree cann't have duplicated data.
+		default value is false
+	*/
 	const bool IsSet;
 
 	
@@ -18,52 +23,79 @@ protected:
 	
 	BinaryTreeNode<T>* root = nullptr;
 
-	int (*rule)(const T& left, const T& right);
+	int (*rule)(const T& superior, const T& minor);
 
 	int node_count = 0;
 
 
 public:
+	/** remove this node and every other nodes under it
+	* @param sub_root	reperence of pointer variable of target node. this variable will set as nullptr after delete.
+	* @remark	this functions is used in Destructor of Binary Tree Class
+	*/
 	void RemoveSubTree(BinaryTreeNode<T>*& sub_root);
 
+	// get number of nodes in this tree.
 	int GetNodeCount();
 
 	BinaryTreeNode<T>* GetRoot();
 
-	//add data;
+	//Create new node with given data and Add that node into Tree. returns true if succeed
 	virtual bool AddData(T newdata) = 0;
 
-	//find data;
+	/**	Find node which has given data.
+	* @param target_data	data to search
+	* @param start_node		the starting point of searching. use root of this Tree.
+	* @param search_return	reperence of Node pointer value. This value will be set as a pointer to found node.
+	* @return	returns true if found data
+	*/
 	virtual bool FindData(const T& target_data, BinaryTreeNode<T>* start_node, BinaryTreeNode<T>*& search_return) const = 0;
 
 	//find node with data and pop it from the tree
 	virtual BinaryTreeNode<T>* PopData(T target_data) = 0;
 
+	//find node with data and delete it from the tree. returns true if succeed
 	virtual bool DeleteData(T target_data) = 0;
 
 protected:
 	int GetDepth(BinaryTreeNode<T>* start_node);
 
-	//pop node out from the tree. without delete it.
+	/**	pop node out from the tree. without delete it.
+	* @return	pointer of poped node.
+	*/
 	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) = 0;
 
+	//pop node out from the tree. and delete it. returns true if succeed.
 	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) = 0;
 
+	/**	attach two nodes with given direction
+	* @param target_parent	node which will become a parent of target_child
+	* @param target_child	node to attach
+	* @param dir			direction to attach
+	*/
 	static bool AttachNode(BinaryTreeNode<T>* target_parent, BinaryTreeNode<T>* target_child, Direction dir);
 
+	/** Detach child node on given direction and returns pointer of child node.
+	* @return	pointer of detached child. if failed, nullptr
+	* @remark	this fuction doesn't delete the detached child node.
+	*/
 	static BinaryTreeNode<T>* DetachChild(BinaryTreeNode<T>* target_parent, Direction child_selector);
 
+	/** Detach target_child node from parent and returns pointer of parent node.
+	* @return	pointer of detached parent node. if failed, nullptr
+	* @remark	this fuction doesn't delete the detached child node.
+	*/
 	static BinaryTreeNode<T>* DetachFromParent(BinaryTreeNode<T>* target_child);
 };
 
 template<typename T>
-inline BinaryTree<T>::BinaryTree(int(*init_rule)(const T& super, const T& minor), bool IsSet) : rule(init_rule), IsSet(IsSet)
+inline BinaryTree<T>::BinaryTree(int(*init_rule)(const T& superior, const T& minor), bool IsSet) : rule(init_rule), IsSet(IsSet)
 {
-	
+
 }
 
 template<typename T>
-inline BinaryTree<T>::BinaryTree(T init_root_data, int(*init_rule)(const T& super, const T& minor), bool IsSet) : rule(init_rule), IsSet(IsSet)
+inline BinaryTree<T>::BinaryTree(T init_root_data, int(*init_rule)(const T& superior, const T& minor), bool IsSet) : rule(init_rule), IsSet(IsSet)
 {
 	root = new BinaryTreeNode<T>(init_root_data);
 	node_count = 1;
@@ -184,6 +216,8 @@ template<typename T>
 inline BinaryTreeNode<T>* BinaryTree<T>::DetachFromParent(BinaryTreeNode<T>* target_child)
 {
 	if (target_child == nullptr || target_child->parent == nullptr) return nullptr;
-	return DetachChild(target_child->parent, target_child->GetDirectionFrom());
-	
+	BinaryTreeNode<T>* result = target_child->parent;
+	if(DetachChild(target_child->parent, target_child->GetDirectionFrom()) == target_child)
+		return result;
+	return nullptr;
 }

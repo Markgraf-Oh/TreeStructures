@@ -8,6 +8,9 @@ enum class Direction
 	None
 };
 
+/**	이진트리노드
+*	Simple Node for Binary Trees like : Binary Search Tree, Heap Tree, AVL Tree, atc
+*/
 template<typename T>
 class BinaryTreeNode
 {
@@ -34,15 +37,32 @@ protected:
 public:
 	T GetData();
 
+	
 	BinaryTreeNode<T>* GetParent();
 
+	/**	주어진 방향에 붙어있는 자식 노드의 포인터를 반환합니다.
+	*	Get the point of child node attached on given direction
+	* @return	pointer of child node including nullptr. if Direction is incorrect, returns nullptr
+	*/
 	BinaryTreeNode<T>* GetChild(Direction dir);
 
+	/**	붙어있는 자식노드의 수를 return합니다.
+	*	returns number of child nodes attached on this node.
+	*/
 	int GetNumberofChilden();
-
+	
+	/**	이 노드가 부모의 어느쪽 가지에 붙어있는지 구합니다.
+	*	Get the direction of the branch which this node is attached. 
+	* @return	Direction::Left or Diretion::Right. if there is no parent node, returns Direction::None
+	*/
 	Direction GetDirectionFrom();
 	
 protected:
+	/**	해당 노드의 데이터를 수정합니다.
+	*	rewrite the data of this node
+	* @remark	이 함수는 사용 시 트리 구조가 꼬이게 할 수 있습니다. 따라서 항상 Pop으로 분리 시킨뒤 사용하고, 수정한뒤 다시 넣으십시오.
+				this function could damage the rule of tree structure. so pop this node from tree before use it.
+	*/
 	void _SetData(T newdata);
 
 };
