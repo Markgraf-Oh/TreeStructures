@@ -49,6 +49,11 @@ protected:
 
 	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) = 0;
 
+	static bool AttachNode(BinaryTreeNode<T>* target_parent, BinaryTreeNode<T>* target_child, Direction dir);
+
+	static BinaryTreeNode<T>* DetachChild(BinaryTreeNode<T>* target_parent, Direction child_selector);
+
+	static BinaryTreeNode<T>* DetachFromParent(BinaryTreeNode<T>* target_child);
 };
 
 template<typename T>
@@ -124,4 +129,61 @@ inline int BinaryTree<T>::GetDepth(BinaryTreeNode<T>* start_node)
 	int right = GetDepth(start_node->child_right);
 
 	return left > right ? left+1 : right+1;
+}
+
+template<typename T>
+inline bool BinaryTree<T>::AttachNode(BinaryTreeNode<T>* target_parent, BinaryTreeNode<T>* target_child, Direction dir)
+{
+	if (target_child->parent != nullptr) return false;
+	switch (dir)
+	{
+	case Direction::Left:
+		if (target_parent->child_left != nullptr) return false;
+		target_parent->child_left = target_child;
+		break;
+	case Direction::Right:
+		if (target_parent->child_right != nullptr) return false;
+		target_parent->child_right = target_child;
+		break;
+	default:
+		return false;
+	}
+	target_child->parent = target_parent;
+	return true;
+}
+
+template<typename T>
+inline BinaryTreeNode<T>* BinaryTree<T>::DetachChild(BinaryTreeNode<T>* target_parent, Direction child_selector)
+{
+	if (target_parent == nullptr) return nullptr;
+	BinaryTreeNode<T>* target_child = nullptr;
+	switch (child_selector)
+	{
+	case Direction::Left:
+		target_child = target_parent->child_left;
+		if (target_child == nullptr) break;
+		target_parent->child_left = nullptr;
+		target_child->parent = nullptr;
+		break;
+	case Direction::Right:
+		target_child = target_parent->child_right;
+		if (target_child == nullptr) break;
+		target_parent->child_right = nullptr;
+		target_child->parent = nullptr;
+		break;
+	case Direction::Both:
+	case Direction::None:
+	default:
+		break;
+	}
+
+	return target_child;
+}
+
+template<typename T>
+inline BinaryTreeNode<T>* BinaryTree<T>::DetachFromParent(BinaryTreeNode<T>* target_child)
+{
+	if (target_child == nullptr || target_child->parent == nullptr) return nullptr;
+	return DetachChild(target_child->parent, target_child->GetDirectionFrom());
+	
 }

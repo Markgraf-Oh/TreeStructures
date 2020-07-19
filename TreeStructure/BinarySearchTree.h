@@ -35,13 +35,15 @@ protected:
 };
 
 template<typename T>
-BinarySearchTree<T>::BinarySearchTree(int (*init_rule)(const T& left, const T& right), bool IsSet) : BinaryTree<T>(init_rule, IsSet)
+BinarySearchTree<T>::BinarySearchTree(int (*init_rule)(const T& left, const T& right), bool IsSet)
+	: BinaryTree<T>(init_rule, IsSet)
 {
 
 }
 
 template<typename T>
-BinarySearchTree<T>::BinarySearchTree(T init_root_data, int (*init_rule)(const T& left, const T& right), bool IsSet) : BinaryTree<T>(init_root_data, init_rule, IsSet)
+BinarySearchTree<T>::BinarySearchTree(T init_root_data, int (*init_rule)(const T& left, const T& right), bool IsSet)
+	: BinaryTree<T>(init_root_data, init_rule, IsSet)
 {
 
 }
@@ -53,41 +55,39 @@ inline bool BinarySearchTree<T>::AddData(T newdata)
 	BinaryTreeNode<T>* next_node = BinaryTree<T>::root;
 	if (next_node == nullptr)
 	{
-		BinaryTree<T>::root = new BinaryTreeNode<T>(newdata);
+		this->root = new BinaryTreeNode<T>(newdata);
 		return true;
 	}
 	while (next_node != nullptr)
 	{
 		current_node = next_node;
-		switch (BinaryTree<T>::rule(newdata, current_node->GetData()))
+		switch (this->rule(newdata, current_node->GetData()))
 		{
 		case 1:
-			next_node = current_node->child_left;
+			next_node = current_node->GetChild(Direction::Left);
 			break;
 		case 0:
 			if (!BinaryTree<T>::IsSet) return false;
-			if (current_node->child_left != nullptr)
+			if (current_node->GetChild(Direction::Left) != nullptr)
 			{
 				return InsertNode(current_node, new BinaryTreeNode<T>(newdata));
 			}
-			next_node = current_node->child_left;
+			next_node = current_node->GetChild(Direction::Left);
 			break;
 		case -1:
-			next_node = current_node->child_right;
+			next_node = current_node->GetChild(Direction::Right);
 		}
 	}
 
-	if (BinaryTree<T>::rule(newdata, current_node->GetData()) >= 0)
+	if (this->rule(newdata, current_node->GetData()) >= 0)
 	{
-		current_node->child_left = new BinaryTreeNode<T>(newdata);
-		current_node->child_left->parent = current_node;
+		BinaryTree<T>::AttachNode(current_node, new BinaryTreeNode<T>(newdata), Direction::Left);
 	}
 	else
 	{
-		current_node->child_right = new BinaryTreeNode<T>(newdata);
-		current_node->child_right->parent = current_node;
+		BinaryTree<T>::AttachNode(current_node, new BinaryTreeNode<T>(newdata), Direction::Right);
 	}
-	BinaryTree<T>::node_count++;
+	this->node_count++;
 	return true;
 }
 
@@ -98,7 +98,7 @@ inline bool BinarySearchTree<T>::FindData(const T& target_data, BinaryTreeNode<T
 {
 	if (start_node == nullptr) return false;
 
-	int comp = BinaryTree<T>::rule(target_data, start_node->GetData());
+	int comp = this->rule(target_data, start_node->GetData());
 	
 	if (comp == 0)
 	{
@@ -106,7 +106,7 @@ inline bool BinarySearchTree<T>::FindData(const T& target_data, BinaryTreeNode<T
 		return true;
 	}
 
-	return FindData(target_data, ((comp > 0) ? start_node->child_left : start_node->child_right),  search_return);
+	return FindData(target_data, ((comp > 0) ? start_node->GetChild(Direction::Left) : start_node->GetChild(Direction::Right)),  search_return);
 }
 
 template<typename T>
@@ -114,7 +114,7 @@ inline BinaryTreeNode<T>* BinarySearchTree<T>::PopData(T target_data)
 {
 	BinaryTreeNode<T>* data_node = nullptr;
 
-	if (!FindData(target_data, BinaryTree<T>::root, data_node)) return nullptr;
+	if (!FindData(target_data, this->root, data_node)) return nullptr;
 
 	return PopNode(data_node);
 }
@@ -124,7 +124,7 @@ inline bool BinarySearchTree<T>::DeleteData(T target_data)
 {
 	BinaryTreeNode<T>* data_node = nullptr;
 
-	if (!FindData(target_data, BinaryTree<T>::root, data_node)) return false;
+	if (!FindData(target_data, this->root, data_node)) return false;
 
 	return DeleteNode(data_node);
 }
@@ -138,39 +138,40 @@ inline BinaryTreeNode<T>* BinarySearchTree<T>::PopNode(BinaryTreeNode<T>* target
 	switch (target_node->GetNumberofChilden())
 	{
 	case 0:
-		
 		break;
 	case 1:
-		replace_node = (target_node->child_left == nullptr) ? target_node->child_right : target_node->child_left;
+		replace_node = (target_node->GetChild(Direction::Left) == nullptr) ?
+			target_node->GetChild(Direction::Right) : target_node->GetChild(Direction::Left);
+
 		break;
 	case 2:
-		if (BinaryTree<T>::rule(target_node->child_left->GetData(), target_node->GetData()) == 0)
+		if (this->rule(target_node->GetChild(Direction::Left)->GetData(), target_node->GetData()) == 0)
 		{
-			replace_node = target_node->child_left;
+			replace_node = target_node->GetChild(Direction::Left);
 		}
 		else
 		{
-			replace_node = target_node->child_right;
-			while (replace_node->child_left != nullptr) replace_node = replace_node->child_left;
-			if (replace_node->child_right != nullptr)
+			replace_node = target_node->GetChild(Direction::Right);
+			while (replace_node->GetChild(Direction::Left) != nullptr)
 			{
-				replace_node->child_right->parent = replace_node->parent;
-				replace_node->parent->child_left = replace_node->child_right;
+				replace_node = replace_node->GetChild(Direction::Left);
 			}
-			replace_node->child_right = target_node->child_right;
-			target_node->child_right->parent = replace_node;
+			if (replace_node->GetChild(Direction::Right) != nullptr)
+			{
+				BinaryTree<T>::AttachNode(replace_node->GetParent(), replace_node->GetChild(Direction::Right), Direction::Left);
+			}
+			BinaryTree<T>::AttachNode(replace_node, target_node->GetChild(Direction::Right), Direction::Right);
 		}
 		break;
 	}
 
-	if (target_node->parent != nullptr)
+	if (target_node->GetParent() != nullptr)
 	{
-		((target_node->parent->child_left == target_node) ?
-			target_node->parent->child_left : target_node->parent->child_right)
-			= replace_node;
+		BinaryTree<T>::AttachNode(target_node->GetParent(), replace_node, target_node->GetDirectionFrom());
 	}
-	if (target_node == BinaryTree<T>::root) BinaryTree<T>::root = nullptr;
-	BinaryTree<T>::node_count--;
+	if (target_node == this->root) this->root = nullptr;
+
+	this->node_count--;
 	return target_node;
 }
 
@@ -193,26 +194,23 @@ inline bool BinarySearchTree<T>::InsertNode(BinaryTreeNode<T>* target_node, Bina
 	//¹Ì¿Ï
 	if (target_node == nullptr || insert_node == nullptr) return false;
 	
-	if (target_node->parent != nullptr)
+	if (target_node->GetParent() != nullptr)
 	{
-		(target_node->parent->child_left == target_node) ?
-			target_node->parent->child_left : target_node->parent->child_right
-			= insert_node;
+		BinaryTree<T>::AttachNode(target_node->GetParent(), insert_node, target_node->GetDirectionFrom());
 	}
 	else if (target_node == BinaryTree<T>::root)
 	{
-		BinaryTree<T>::root = insert_node;
+		this->root = insert_node;
+		BinaryTree<T>::DetachFromParent(insert_node);
 	}		
 	else return false;
 
-	insert_node->parent = target_node->parent;
-	target_node->parent = insert_node;
+	Direction new_target_direction = (BinaryTree<T>::rule(insert_node->GetData(), target_node->GetData()) >= 0) ? 
+		Direction::Left : Direction::Right;
+	
+	BinaryTree<T>::AttachNode(target_node->GetParent(), insert_node, new_target_direction);
+	
+	this->node_count++;
 
-	if (BinaryTree<T>::rule(insert_node->GetData(), target_node->GetData()) >= 0)
-	{
-		insert_node->child_left = target_node;
-	}
-	else insert_node->child_right = target_node;
-	BinaryTree<T>::node_count++;
 	return true;
 }

@@ -4,14 +4,14 @@ enum class Direction
 {
 	Left,
 	Right,
-	Both
+	Both,
+	None
 };
 
 template<typename T>
 class BinaryTreeNode
 {
 	template<typename U> friend class BinaryTree;
-	template<typename U> friend class BinarySearchTree;
 public:
 	BinaryTreeNode();
 
@@ -36,11 +36,11 @@ public:
 
 	BinaryTreeNode<T>* GetParent();
 
-	BinaryTreeNode<T>* GetLeftChild();
-
-	BinaryTreeNode<T>* GetRightChild();
+	BinaryTreeNode<T>* GetChild(Direction dir);
 
 	int GetNumberofChilden();
+
+	Direction GetDirectionFrom();
 	
 protected:
 	void _SetData(T newdata);
@@ -78,15 +78,17 @@ inline BinaryTreeNode<T>* BinaryTreeNode<T>::GetParent()
 }
 
 template<typename T>
-inline BinaryTreeNode<T>* BinaryTreeNode<T>::GetLeftChild()
+inline BinaryTreeNode<T>* BinaryTreeNode<T>::GetChild(Direction dir)
 {
-	return child_left;
-}
-
-template<typename T>
-inline BinaryTreeNode<T>* BinaryTreeNode<T>::GetRightChild()
-{
-	return child_right;
+	switch (dir)
+	{
+	case Direction::Left :
+		return child_left;
+	case Direction::Right :
+		return child_right;
+	default:
+		return nullptr;
+	}
 }
 
 template<typename T>
@@ -96,6 +98,16 @@ inline int BinaryTreeNode<T>::GetNumberofChilden()
 	if (nullptr != child_left) num++;
 	if (nullptr != child_right) num++;
 	return num;
+}
+
+template<typename T>
+inline Direction BinaryTreeNode<T>::GetDirectionFrom()
+{
+	if (parent == nullptr) return Direction::None;
+	if (parent->child_left == this) return Direction::Left;
+	if (parent->child_right == this) return Direction::Right;
+
+	return Direction::None;
 }
 
 template<typename T>
