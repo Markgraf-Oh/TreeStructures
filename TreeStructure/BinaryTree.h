@@ -1,10 +1,23 @@
 #pragma once
 #include "BinaryTreeNode.h"
 
-/**	Base Class for Binary Trees.
+/**	place holder to force subclasses to overrdie certaion non virtual fuctions.
 */
 template<typename T>
-class BinaryTree
+class BinaryTreePlaceHolder
+{
+protected:
+	virtual bool AddNode(BinaryTreeNode<T>* new_node) = 0;
+
+	virtual bool InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node) = 0;
+
+	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) = 0;
+};
+
+/**	Base Class for all Binary Trees.
+*/
+template<typename T>
+class BinaryTree : public BinaryTreePlaceHolder<T>
 {
 public:
 	BinaryTree(int (*init_rule)(const T& superior, const T& minor), bool IsSet = false);
@@ -57,16 +70,21 @@ public:
 	//find node with data and delete it from the tree. returns true if succeed
 	virtual bool DeleteData(T target_data) = 0;
 
-protected:
-	int GetDepth(BinaryTreeNode<T>* start_node);
+protected:	
 
-	/**	pop node out from the tree. without delete it.
-	* @return	pointer of poped node.
-	*/
-	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) = 0;
+	// this fuction increase node_count, and always return true
+	virtual bool AddNode(BinaryTreeNode<T>* new_node) override;
+
+	// this fuction increase node_count, and always return true
+	virtual bool InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node) override;
+
+	// this fuction decrease node_count, and always return nullptr
+	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) override;
 
 	//pop node out from the tree. and delete it. returns true if succeed.
 	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) = 0;
+
+	int GetDepth(BinaryTreeNode<T>* start_node);
 
 	/**	attach two nodes with given direction
 	* @param target_parent	node which will become a parent of target_child
@@ -86,6 +104,13 @@ protected:
 	* @remark	this fuction doesn't delete the detached child node.
 	*/
 	static BinaryTreeNode<T>* DetachFromParent(BinaryTreeNode<T>* target_child);
+
+	bool SwapWithChild(BinaryTreeNode<T>* target_parent, Direction child_selector);
+
+	static bool SwapDataPtr(BinaryTreeNode<T>* target1, BinaryTreeNode<T>* target2);
+
+	void IncreaseNodeCount() { ++node_count; };
+	void DecreaseNodeCount() { if(node_count >0 ) --node_count; };
 };
 
 template<typename T>
@@ -134,7 +159,7 @@ inline BinaryTreeNode<T>* BinaryTree<T>::GetRoot()
 template<typename T>
 inline bool BinaryTree<T>::FindData(const T& target_data, BinaryTreeNode<T>* start_node, BinaryTreeNode<T>*& search_return) const
 {
-	if (start_node = nullptr) return false;
+	if (start_node == nullptr) return false;
 
 	int compare = rule(target_data, start_node->GetData());
 
@@ -164,8 +189,30 @@ inline int BinaryTree<T>::GetDepth(BinaryTreeNode<T>* start_node)
 }
 
 template<typename T>
+inline bool BinaryTree<T>::AddNode(BinaryTreeNode<T>* new_node)
+{
+	++node_count;
+	return true;
+}
+
+template<typename T>
+inline bool BinaryTree<T>::InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node)
+{
+	++node_count;
+	return true;
+}
+
+template<typename T>
+inline BinaryTreeNode<T>* BinaryTree<T>::PopNode(BinaryTreeNode<T>* target_node)
+{
+	--node_count;
+	return target_node;
+}
+
+template<typename T>
 inline bool BinaryTree<T>::AttachNode(BinaryTreeNode<T>* target_parent, BinaryTreeNode<T>* target_child, Direction dir)
 {
+	if (target_parent == nullptr || target_child == nullptr) return false;
 	if (target_child->parent != nullptr) return false;
 	switch (dir)
 	{
@@ -220,4 +267,47 @@ inline BinaryTreeNode<T>* BinaryTree<T>::DetachFromParent(BinaryTreeNode<T>* tar
 	if(DetachChild(target_child->parent, target_child->GetDirectionFrom()) == target_child)
 		return result;
 	return nullptr;
+}
+
+template<typename T>
+inline bool BinaryTree<T>::SwapWithChild(BinaryTreeNode<T>* target_parent, Direction child_selector)
+{
+	if (target_parent == nullptr) return false;
+
+	BinaryTreeNode<T>* target_child = DetachChild(target_parent, child_selector);
+
+	if (target_child == nullptr) return false;
+
+	Direction opposite = (child_selector == Direction::Left) ?
+		Direction::Right : Direction::Left;
+
+	BinaryTreeNode<T>* target_child_sibling	= DetachChild(target_parent, opposite);
+		
+	BinaryTreeNode<T>* grand_child[2] = {DetachChild(target_child, Direction::Left), DetachChild(target_child, Direction::Right)};
+
+	Direction parent_direction_from = target_parent->GetDirectionFrom();
+
+	BinaryTreeNode<T>* grand_parent = DetachFromParent(target_parent);
+
+	
+	AttachNode(grand_parent, target_child, parent_direction_from);
+	AttachNode(target_child, target_child_sibling, opposite);
+	AttachNode(target_child, target_parent, child_selector);
+	AttachNode(target_parent, grand_child[0], Direction::Left);
+	AttachNode(target_parent, grand_child[1], Direction::Right);
+
+	if (target_parent == this->root) this->root = target_child;
+	
+	return true;
+}
+
+template<typename T>
+inline bool BinaryTree<T>::SwapDataPtr(BinaryTreeNode<T>* target1, BinaryTreeNode<T>* target2)
+{
+	if (target1 == nullptr || target2 == nullptr) return false;
+	T* tempptr = target1->data_ptr;
+	target1->data_ptr = target2->data_ptr;
+	target2->data_ptr = tempptr;
+	return true;
+	
 }

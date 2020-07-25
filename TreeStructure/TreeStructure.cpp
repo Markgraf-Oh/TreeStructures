@@ -4,23 +4,41 @@
 #include <iostream>
 #include "BinaryTree.h"
 #include "BinarySearchTree.h"
+#include "BinaryHeapTree.h"
 
 int main()
 {
-    BinarySearchTree<int> test_tree(10, [](const int& left, const int& right)->int
+    BinaryHeapTree<int> test_tree(10, [](const int& left, const int& right)->int
         {
             if (left > right) return 1;
             if (left == right) return 0;
             return -1;
-        }, true);
+        });
 
-    test_tree.AddData(10);
-    std::cout << test_tree.GetNodeCount() << std::endl;
+    for (int i = 0; i < 20; i++)
+    {
+        if (i == 10)
+        {
+            std::cout << std::endl;
+        }
+        test_tree.Push(i);
+    }
 
-    test_tree.DeleteData(5);
-    std::cout << test_tree.GetNodeCount() << std::endl;
-    test_tree.DeleteData(10);
-    std::cout << test_tree.GetNodeCount() << std::endl;
+    test_tree.ShowTree();
+
+    for (int i = 0; i < 25; i++)
+    {
+        if (test_tree.GetFront() != nullptr)
+        {
+            std::cout << test_tree.GetFront()->GetData() << std::endl;
+        }
+        else
+        {
+            std::cout << "ha! empty!" <<std::endl;
+        }
+        
+        test_tree.PopFront();
+    }
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴

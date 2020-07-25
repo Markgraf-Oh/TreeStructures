@@ -2,13 +2,23 @@
 
 #include "BinaryTree.h"
 
+
+/* 이진 탐색 트리
+ *@param init_rule	the fuction which gets left and right value, and returns
+ *					+1 if they aligned correctly,
+ *					0 if they are same,
+ *					-1 if they need to be aligned.
+ */
 template<typename T>
 class BinarySearchTree :
 	public BinaryTree<T>
 {
 public:
+	
 	BinarySearchTree(int (*init_rule)(const T& left, const T& right), bool IsSet = false);
 
+	/**	@param init_rule	the fuction which gets left and right value, and returns +1 if they aligned correctly, 0 if they are same, -1 if they need to be aligned.
+	*/
 	BinarySearchTree(T init_root_data, int (*init_rule)(const T& left, const T& right), bool IsSet = false);
 
 public:
@@ -28,8 +38,13 @@ public:
 	
 	//find node with data and delete it from the tree
 	virtual bool DeleteData(T target_data) override;
-
 protected:
+	//Add new node to the tree.
+	virtual bool AddNode(BinaryTreeNode<T>* new_node) override;
+
+	//insert given node under the target_node.  returns true if succeed.
+	virtual bool InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node) override;
+
 	/**	pop node out from the tree. without delete it.
 	* @return	pointer of poped node.
 	*/
@@ -38,8 +53,7 @@ protected:
 	//pop node out from the tree. and delete it. returns true if succeed.
 	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) override;
 
-	//insert given node under the target_node.  returns true if succeed.
-	virtual bool InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node);
+	
 };
 
 template<typename T>
@@ -59,44 +73,13 @@ BinarySearchTree<T>::BinarySearchTree(T init_root_data, int (*init_rule)(const T
 template<typename T>
 inline bool BinarySearchTree<T>::AddData(T newdata)
 {
-	BinaryTreeNode<T>* current_node = nullptr;
-	BinaryTreeNode<T>* next_node = BinaryTree<T>::root;
-	if (next_node == nullptr)
-	{
-		this->root = new BinaryTreeNode<T>(newdata);
-		return true;
-	}
-	while (next_node != nullptr)
-	{
-		current_node = next_node;
-		switch (this->rule(newdata, current_node->GetData()))
-		{
-		case 1:
-			next_node = current_node->GetChild(Direction::Left);
-			break;
-		case 0:
-			if (!BinaryTree<T>::IsSet) return false;
-			if (current_node->GetChild(Direction::Left) != nullptr)
-			{
-				return InsertNode(current_node, new BinaryTreeNode<T>(newdata));
-			}
-			next_node = current_node->GetChild(Direction::Left);
-			break;
-		case -1:
-			next_node = current_node->GetChild(Direction::Right);
-		}
-	}
+	BinaryTreeNode<T>* new_node = new BinaryTreeNode<T>(newdata);
 
-	if (this->rule(newdata, current_node->GetData()) >= 0)
-	{
-		BinaryTree<T>::AttachNode(current_node, new BinaryTreeNode<T>(newdata), Direction::Left);
-	}
-	else
-	{
-		BinaryTree<T>::AttachNode(current_node, new BinaryTreeNode<T>(newdata), Direction::Right);
-	}
-	this->node_count++;
-	return true;
+	if (AddNode(new_node)) return true;
+	
+	delete new_node;
+	new_node = nullptr;
+	return false;
 }
 
 
@@ -136,6 +119,92 @@ inline bool BinarySearchTree<T>::DeleteData(T target_data)
 
 	return DeleteNode(data_node);
 }
+
+template<typename T>
+inline bool BinarySearchTree<T>::DeleteNode(BinaryTreeNode<T>* target_node)
+{
+	BinaryTreeNode<T>* poped_node = PopNode(target_node);
+	if (poped_node == nullptr)
+	{
+		return false;
+	}
+	delete poped_node;
+	poped_node = nullptr;
+	return true;
+}
+
+template<typename T>
+inline bool BinarySearchTree<T>::AddNode(BinaryTreeNode<T>* new_node)
+{
+	if (new_node == nullptr) return false;
+
+	BinaryTreeNode<T>* current_node = nullptr;
+	BinaryTreeNode<T>* next_node = BinaryTree<T>::root;
+
+	if (next_node == nullptr)
+	{
+		this->root = new_node;
+		return true;
+	}
+	while (next_node != nullptr)
+	{
+		current_node = next_node;
+		switch (this->rule(new_node->GetData(), current_node->GetData()))
+		{
+		case 1:
+			next_node = current_node->GetChild(Direction::Left);
+			break;
+		case 0:
+			if (!BinaryTree<T>::IsSet) return false;
+			if (current_node->GetChild(Direction::Left) != nullptr)
+			{
+				return InsertNode(current_node, new_node);
+			}
+			next_node = current_node->GetChild(Direction::Left);
+			break;
+		case -1:
+			next_node = current_node->GetChild(Direction::Right);
+		}
+	}
+
+	if (this->rule(new_node->GetData(), current_node->GetData()) >= 0)
+	{
+		BinaryTree<T>::AttachNode(current_node, new_node, Direction::Left);
+	}
+	else
+	{
+		BinaryTree<T>::AttachNode(current_node, new_node, Direction::Right);
+	}
+	
+	return __super::AddNode(new_node);
+}
+
+template<typename T>
+inline bool BinarySearchTree<T>::InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node)
+{	
+	//미완
+	if (target_node == nullptr || insert_node == nullptr) return false;
+	
+	if (target_node->GetParent() != nullptr)
+	{
+		BinaryTree<T>::AttachNode(target_node->GetParent(), insert_node, target_node->GetDirectionFrom());
+	}
+	else if (target_node == BinaryTree<T>::root)
+	{
+		this->root = insert_node;
+		BinaryTree<T>::DetachFromParent(insert_node);
+	}		
+	else return false;
+
+	Direction new_target_direction = (BinaryTree<T>::rule(insert_node->GetData(), target_node->GetData()) >= 0) ? 
+		Direction::Left : Direction::Right;
+	
+	BinaryTree<T>::AttachNode(target_node->GetParent(), insert_node, new_target_direction);
+	
+	return __super::InsertNode(target_node, insert_node);
+	
+}
+
 
 template<typename T>
 inline BinaryTreeNode<T>* BinarySearchTree<T>::PopNode(BinaryTreeNode<T>* target_node)
@@ -179,46 +248,5 @@ inline BinaryTreeNode<T>* BinarySearchTree<T>::PopNode(BinaryTreeNode<T>* target
 	}
 	if (target_node == this->root) this->root = nullptr;
 
-	this->node_count--;
-	return target_node;
-}
-
-template<typename T>
-inline bool BinarySearchTree<T>::DeleteNode(BinaryTreeNode<T>* target_node)
-{
-	BinaryTreeNode<T>* poped_node = PopNode(target_node);
-	if (poped_node == nullptr)
-	{
-		return false;
-	}
-	delete poped_node;
-	poped_node = nullptr;
-	return true;
-}
-
-template<typename T>
-inline bool BinarySearchTree<T>::InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node)
-{	
-	//미완
-	if (target_node == nullptr || insert_node == nullptr) return false;
-	
-	if (target_node->GetParent() != nullptr)
-	{
-		BinaryTree<T>::AttachNode(target_node->GetParent(), insert_node, target_node->GetDirectionFrom());
-	}
-	else if (target_node == BinaryTree<T>::root)
-	{
-		this->root = insert_node;
-		BinaryTree<T>::DetachFromParent(insert_node);
-	}		
-	else return false;
-
-	Direction new_target_direction = (BinaryTree<T>::rule(insert_node->GetData(), target_node->GetData()) >= 0) ? 
-		Direction::Left : Direction::Right;
-	
-	BinaryTree<T>::AttachNode(target_node->GetParent(), insert_node, new_target_direction);
-	
-	this->node_count++;
-
-	return true;
+	return __super::PopNode(target_node);
 }
