@@ -155,7 +155,7 @@ inline bool BinarySearchTree<T>::AddNode(BinaryTreeNode<T>* new_node)
 			next_node = current_node->GetChild(Direction::Left);
 			break;
 		case 0:
-			if (!BinaryTree<T>::IsSet) return false;
+			if (BinaryTree<T>::IsSet) return false;
 			if (current_node->GetChild(Direction::Left) != nullptr)
 			{
 				return InsertNode(current_node, new_node);

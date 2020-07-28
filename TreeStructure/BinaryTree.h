@@ -81,7 +81,7 @@ protected:
 	// this fuction decrease node_count, and always return nullptr
 	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) override;
 
-	//pop node out from the tree. and delete it. returns true if succeed.
+	//pop node out from the tree. and delete it. returns ;true if succeed.
 	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) = 0;
 
 	int GetDepth(BinaryTreeNode<T>* start_node);

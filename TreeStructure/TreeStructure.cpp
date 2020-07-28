@@ -5,40 +5,26 @@
 #include "BinaryTree.h"
 #include "BinarySearchTree.h"
 #include "BinaryHeapTree.h"
+#include "AVLTreeNode.h"
+#include "AVLTree.h"
 
 int main()
 {
-    BinaryHeapTree<int> test_tree(10, [](const int& left, const int& right)->int
+    AVLTree<int>* tester = new AVLTree<int>(10, [](const int& left, const int& right)->int
         {
             if (left > right) return 1;
             if (left == right) return 0;
             return -1;
         });
-
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 20; i += 2)
     {
-        if (i == 10)
-        {
-            std::cout << std::endl;
-        }
-        test_tree.Push(i);
-    }
+        tester->AddData(i);
+    }    
 
-    test_tree.ShowTree();
+    delete tester;
+    tester = nullptr;
 
-    for (int i = 0; i < 25; i++)
-    {
-        if (test_tree.GetFront() != nullptr)
-        {
-            std::cout << test_tree.GetFront()->GetData() << std::endl;
-        }
-        else
-        {
-            std::cout << "ha! empty!" <<std::endl;
-        }
-        
-        test_tree.PopFront();
-    }
+    std::cout << LINE_INFO << std::endl;
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴

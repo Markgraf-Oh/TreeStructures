@@ -1,4 +1,9 @@
 #pragma once
+#include <string>
+#include <algorithm>
+
+#define LINE_INFO (std::string(__FUNCTION__) + " in " + std::string(__FILE__) +"(line : " + std::to_string(__LINE__)+ ")")
+#define VAR_NAME(var) (#var)
 
 enum class Direction
 {
