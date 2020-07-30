@@ -22,6 +22,11 @@ public:
 	int GetHeight();
 
 	int ResetHeight();
+
+	void _SetHeightManualy(int new_height)
+	{
+		height = new_height;
+	};
 };
 
 template<typename T>

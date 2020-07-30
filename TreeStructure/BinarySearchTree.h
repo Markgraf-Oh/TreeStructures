@@ -42,6 +42,9 @@ protected:
 	//Add new node to the tree.
 	virtual bool AddNode(BinaryTreeNode<T>* new_node) override;
 
+	//pop node out from the tree. and delete it. returns true if succeed.
+	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) override;
+
 	//insert given node under the target_node.  returns true if succeed.
 	virtual bool InsertNode(BinaryTreeNode<T>* target_node, BinaryTreeNode<T>* insert_node) override;
 
@@ -50,10 +53,10 @@ protected:
 	*/
 	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) override;
 
-	//pop node out from the tree. and delete it. returns true if succeed.
-	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) override;
+	void _PopNode_FindReplace(BinaryTreeNode<T>*& target_node, BinaryTreeNode<T>*& replace_node);
 
-	
+	void _PopNode_SwapAndDetach(BinaryTreeNode<T>*& target_node, BinaryTreeNode<T>*& replace_node);
+		
 };
 
 template<typename T>
@@ -212,41 +215,51 @@ inline BinaryTreeNode<T>* BinarySearchTree<T>::PopNode(BinaryTreeNode<T>* target
 	if (target_node == nullptr) return nullptr;
 
 	BinaryTreeNode<T>* replace_node = nullptr;
+
+	_PopNode_FindReplace(target_node, replace_node);
+	
+	_PopNode_SwapAndDetach(target_node, replace_node);
+		
+	this->DecreaseNodeCount();
+
+	if (replace_node == this->root) this->root == nullptr;
+
+	return replace_node;
+}
+
+template<typename T>
+inline void BinarySearchTree<T>::_PopNode_FindReplace(BinaryTreeNode<T>*& target_node, BinaryTreeNode<T>*& replace_node)
+{
 	switch (target_node->GetNumberofChilden())
 	{
 	case 0:
+		replace_node = target_node;
 		break;
 	case 1:
 		replace_node = (target_node->GetChild(Direction::Left) == nullptr) ?
 			target_node->GetChild(Direction::Right) : target_node->GetChild(Direction::Left);
-
 		break;
 	case 2:
-		if (this->rule(target_node->GetChild(Direction::Left)->GetData(), target_node->GetData()) == 0)
+		replace_node = target_node->GetChild(Direction::Right);
+		while (replace_node->GetChild(Direction::Left) != nullptr)
 		{
-			replace_node = target_node->GetChild(Direction::Left);
-		}
-		else
-		{
-			replace_node = target_node->GetChild(Direction::Right);
-			while (replace_node->GetChild(Direction::Left) != nullptr)
-			{
-				replace_node = replace_node->GetChild(Direction::Left);
-			}
-			if (replace_node->GetChild(Direction::Right) != nullptr)
-			{
-				BinaryTree<T>::AttachNode(replace_node->GetParent(), replace_node->GetChild(Direction::Right), Direction::Left);
-			}
-			BinaryTree<T>::AttachNode(replace_node, target_node->GetChild(Direction::Right), Direction::Right);
+			replace_node = replace_node->GetChild(Direction::Left);
 		}
 		break;
 	}
+}
 
-	if (target_node->GetParent() != nullptr)
+template<typename T>
+inline void BinarySearchTree<T>::_PopNode_SwapAndDetach(BinaryTreeNode<T>*& target_node, BinaryTreeNode<T>*& replace_node)
+{
+	BinaryTreeNode<T>* parent = BinaryTree<T>::DetachFromParent(replace_node);
+
+	if (replace_node != target_node)
 	{
-		BinaryTree<T>::AttachNode(target_node->GetParent(), replace_node, target_node->GetDirectionFrom());
-	}
-	if (target_node == this->root) this->root = nullptr;
+		BinaryTree<T>::SwapDataPtr(replace_node, target_node);
 
-	return __super::PopNode(target_node);
+		BinaryTreeNode<T>* child = BinaryTree<T>::DetachChild(replace_node, Direction::Right);
+
+		BinaryTree<T>::AttachNode(parent, child, Direction::Right);
+	}
 }

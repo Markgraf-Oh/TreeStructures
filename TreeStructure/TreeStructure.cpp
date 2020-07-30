@@ -16,10 +16,19 @@ int main()
             if (left == right) return 0;
             return -1;
         });
-    for (int i = 0; i < 20; i += 2)
+    for (int i = 0; i < 20; i ++)
     {
         tester->AddData(i);
-    }    
+    }
+
+    std::cout << tester->GetNodeCount() << std::endl;
+    
+    for (int i = 0; i < 20; i += 4)
+    {
+        tester->DeleteData(i);
+    }
+
+    std::cout << tester->GetNodeCount() << std::endl;
 
     delete tester;
     tester = nullptr;

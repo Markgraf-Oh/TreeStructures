@@ -24,10 +24,10 @@ public:
 	//virtual bool FindData(const T& target_data, BinaryTreeNode<T>* start_node, BinaryTreeNode<T>*& search_return) const override;
 
 	//find node with data and pop it from the tree
-	//virtual BinaryTreeNode<T>* PopData(T target_data) override;
+	virtual BinaryTreeNode<T>* PopData(T target_data) override;
 
 	//find node with data and delete it from the tree
-	//virtual bool DeleteData(T target_data) override;
+	virtual bool DeleteData(T target_data) override;
 
 
 protected:
@@ -40,10 +40,10 @@ protected:
 	/**	pop node out from the tree. without delete it.
 	* @return	pointer of poped node.
 	*/
-	//virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) override;
+	virtual BinaryTreeNode<T>* PopNode(BinaryTreeNode<T>* target_node) override;
 
 	//pop node out from the tree. and delete it. returns true if succeed.
-	//virtual bool DeleteNode(BinaryTreeNode<T>* target_node) override;
+	virtual bool DeleteNode(BinaryTreeNode<T>* target_node) override;
 
 public:
 	static AVLTreeNode<T>* Cast(BinaryTreeNode<T>* target);
@@ -80,17 +80,39 @@ inline bool AVLTree<T>::AddData(T newdata)
 }
 
 template<typename T>
+inline BinaryTreeNode<T>* AVLTree<T>::PopData(T target_data)
+{
+	BinaryTreeNode<T>* data_node = nullptr;
+	
+	if(!this->FindData(target_data, this->root, data_node)) return nullptr;
+
+	if (Cast(data_node) == nullptr) return nullptr;
+
+	return PopNode(data_node);
+}
+
+template<typename T>
+inline bool AVLTree<T>::DeleteData(T target_data)
+{
+	BinaryTreeNode<T>* data_node = nullptr;
+
+	if (!this->FindData(target_data, this->root, data_node)) return false;
+
+	if (Cast(data_node) == nullptr) return false;
+
+	return DeleteNode(data_node);
+}
+
+template<typename T>
 inline bool AVLTree<T>::AddNode(BinaryTreeNode<T>* new_node)
 {
+	AVLTreeNode<T>* CheckPoint = Cast(new_node);
+	if (CheckPoint == nullptr) return false;
 	
 	bool result =  BinarySearchTree<T>::AddNode(new_node);
 
 	if (result)
 	{
-		AVLTreeNode<T>* CheckPoint = Cast(new_node);
-
-		if (nullptr == CheckPoint) return false;
-
 		CheckPoint = Cast(CheckPoint->GetParent());
 
 		while (CheckPoint != nullptr)
@@ -100,11 +122,50 @@ inline bool AVLTree<T>::AddNode(BinaryTreeNode<T>* new_node)
 			if (CheckPoint == nullptr || diff == 0) break;
 			CheckPoint = Cast(CheckPoint->GetParent());
 		}
-		//Currently writing Algoritem in hands....
-		//손으로 알고리즘 그리는 중
 	}
 	
 	return result;
+}
+
+template<typename T>
+inline BinaryTreeNode<T>* AVLTree<T>::PopNode(BinaryTreeNode<T>* target_node)
+{
+	if (dynamic_cast<AVLTreeNode<T>*>(target_node) == nullptr) return nullptr;
+
+	BinaryTreeNode<T>* replace_node = nullptr;
+	//_PopNode_FindReplace(target_node, replace_node);
+	BinarySearchTree<T>::_PopNode_FindReplace(target_node, replace_node);
+
+	AVLTreeNode<T>* CheckPoint = Cast(replace_node->GetParent());
+
+	BinarySearchTree<T>::_PopNode_SwapAndDetach(target_node, replace_node);
+	
+	AVLTreeNode<T>* AVL_replacer = dynamic_cast<AVLTreeNode<T>*>(replace_node);
+	if (AVL_replacer != nullptr)
+	{
+		AVL_replacer->_SetHeightManualy(dynamic_cast<AVLTreeNode<T>*>(target_node)->GetHeight());
+	}
+	
+	//reset heights
+	while (CheckPoint != nullptr)
+	{
+		int diff = CheckPoint->ResetHeight();
+		CheckPoint = BalanceTree(CheckPoint);
+		if (CheckPoint == nullptr || diff == 0) break;
+		CheckPoint = Cast(CheckPoint->GetParent());
+	}
+
+	this->DecreaseNodeCount();
+
+	return replace_node;
+}
+
+template<typename T>
+inline bool AVLTree<T>::DeleteNode(BinaryTreeNode<T>* target_node)
+{
+	if (Cast(target_node) == nullptr) return false;
+
+	return __super::DeleteNode(target_node);
 }
 
 template<typename T>
