@@ -1,4 +1,5 @@
 #pragma once
+
 #include "BinaryTreeNode.h"
 #include "BinaryTree.h"
 
@@ -10,6 +11,7 @@ public:
 	AVLTreeNode(T initdata);
 
 protected:
+	//Height of subtree
 	int height = 1;
 
 public:
@@ -21,9 +23,14 @@ public:
 
 	int GetHeight();
 
+	/** Calculate collect height by comparing two subtree's heights.
+	*@return	difference between new height value and old one.(new-old)
+	*/
 	int ResetHeight();
 
-	void _SetHeightManualy(int new_height)
+	/** Manually change the height value of node
+	*/
+	void _SetHeightManually(int new_height)
 	{
 		height = new_height;
 	};

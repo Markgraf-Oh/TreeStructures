@@ -51,7 +51,7 @@ public:
 	// get number of nodes in this tree.
 	int GetNodeCount();
 
-	BinaryTreeNode<T>* GetRoot();
+	virtual BinaryTreeNode<T>* GetRoot();
 
 	//Create new node with given data and Add that node into Tree. returns true if succeed
 	virtual bool AddData(T newdata) = 0;

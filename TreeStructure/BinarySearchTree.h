@@ -222,7 +222,7 @@ inline BinaryTreeNode<T>* BinarySearchTree<T>::PopNode(BinaryTreeNode<T>* target
 		
 	this->DecreaseNodeCount();
 
-	if (replace_node == this->root) this->root == nullptr;
+	if (replace_node == this->root) this->root = nullptr;
 
 	return replace_node;
 }

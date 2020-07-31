@@ -22,7 +22,10 @@ int main()
     }
 
     std::cout << tester->GetNodeCount() << std::endl;
-    
+    AVLTreeNode<int>* search = nullptr;
+    tester->FindData(10, tester->GetRoot(), search);
+    std::cout << search->GetHeight() << std::endl;
+
     for (int i = 0; i < 20; i += 4)
     {
         tester->DeleteData(i);
